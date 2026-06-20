@@ -1,0 +1,206 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Login";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mauno POS — Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: #a8a8a8;
+            border-radius: 18px;
+            width: 620px;
+            padding: 60px 50px 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transform: scale(0.96);
+        }
+
+        .input-wrap {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .input-wrap input {
+            width: 100%;
+            background: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 22px 32px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            color: #111;
+            outline: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: box-shadow 0.2s;
+        }
+
+        .input-wrap input::placeholder { color: #555; }
+
+        .input-wrap input:focus {
+            box-shadow: 0 0 0 3px rgba(100,120,255,0.25), 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .btn-login {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            margin-top: 4px;
+            background: linear-gradient(135deg, #4B6FFF, #3db8e8);
+            border: none;
+            border-radius: 999px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(75,111,255,0.35);
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+
+        .btn-login:hover {
+            opacity: 0.92;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(75,111,255,0.45);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            color: #c0392b;
+            font-size: 0.85rem;
+            text-align: center;
+            margin: 10px 0 4px;
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+        .login-links {
+            margin-top: 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .login-links a {
+            font-size: 0.95rem;
+            text-decoration: none;
+            display: block;
+        }
+
+        .link-forgot { color: #4B6FFF; }
+        .link-signup { color: #111; }
+        .login-links a:hover { text-decoration: underline; }
+
+        @@media (max-width: 660px) {
+            .login-card { width: 94vw; padding: 44px 24px 36px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card" id="loginCard">
+
+        <form asp-controller="Auth" asp-action="Login" method="post" style="width:100%;">
+            @Html.AntiForgeryToken()
+
+            <div class="input-wrap">
+                <input type="text"
+                       name="Username"
+                       id="username"
+                       placeholder="Username"
+                       autocomplete="username" />
+            </div>
+
+            <div class="input-wrap">
+                <input type="password"
+                       name="Password"
+                       id="password"
+                       placeholder="Password"
+                       autocomplete="current-password" />
+            </div>
+
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <div class="error-msg">@ViewBag.ErrorMessage</div>
+            }
+            else
+            {
+                <div class="error-msg"></div>
+            }
+
+            <button type="submit" class="btn-login">Login</button>
+
+        </form>
+
+        <div class="login-links">
+            <a asp-controller="Auth" asp-action="ForgotPassword" class="link-forgot">Forgot Password?</a>
+            <a asp-controller="Auth" asp-action="Register" class="link-signup">Sign Up</a>
+        </div>
+ 
+
+    </div>
+
+    <script>
+        $(function () {
+            // Animate card in
+            $('#loginCard').delay(100).animate({ opacity: 1 }, {
+                duration: 400,
+                step: function (now) {
+                    $(this).css('transform', 'scale(' + (0.96 + now * 0.04) + ')');
+                },
+                complete: function () {
+                    $(this).css('transform', 'scale(1)');
+                    $('#username').focus();
+                }
+            });
+
+            // Input focus lift
+            $('input').on('focus', function () {
+                $(this).closest('.input-wrap').stop(true).animate({ marginBottom: '22px' }, 150);
+            }).on('blur', function () {
+                $(this).closest('.input-wrap').stop(true).animate({ marginBottom: '20px' }, 150);
+            });
+
+            // Shake card if error is showing
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <text>
+                setTimeout(function () {
+                    let count = 0;
+                    const interval = setInterval(function () {
+                        $('#loginCard').css('margin-left', count % 2 === 0 ? '10px' : '-10px');
+                        count++;
+                        if (count > 5) { clearInterval(interval); $('#loginCard').css('margin-left', '0'); }
+                    }, 55);
+                }, 450);
+                </text>
+            }
+        });
+    </script>
+
+</body>
+</html>

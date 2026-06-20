@@ -1,0 +1,614 @@
+@model MaunoWeb.Models.Client
+@{
+    Layout = null;
+    ViewData["Title"] = "My Portal";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mauno POS — Client Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #4f63f5; --cyan: #3db8e8; --white: #fff;
+      --bg: #f4f6ff; --card: #fff; --text: #1a1a2e; --muted: #6b7280;
+      --sidebar: #4f63f5; --sidebar-w: 220px;
+      --shadow: 0 2px 16px rgba(79,99,245,0.10);
+    }
+    html, body { height: 100%; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      height: 62px; background: var(--white);
+      border-bottom: 1px solid rgba(79,99,245,0.10);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 32px; flex-shrink: 0;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    }
+    .topbar-brand { font-size: 1.3rem; font-weight: 800; color: var(--blue); letter-spacing: -0.02em; }
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .topbar-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 0.95rem;
+    }
+    .topbar-name { font-weight: 600; font-size: 0.92rem; color: var(--text); }
+    .topbar-logout {
+      background: none; border: 1px solid rgba(79,99,245,0.25);
+      border-radius: 8px; padding: 6px 14px;
+      font-size: 0.82rem; font-family: 'Inter', sans-serif;
+      color: var(--muted); cursor: pointer; transition: background 0.2s;
+    }
+    .topbar-logout:hover { background: rgba(79,99,245,0.06); }
+
+    /* ── LAYOUT ── */
+    .layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w); background: var(--sidebar);
+      display: flex; flex-direction: column;
+      padding: 28px 14px; gap: 6px; flex-shrink: 0;
+    }
+    .sidebar-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: rgba(255,255,255,0.45);
+      padding: 0 10px; margin: 16px 0 6px;
+    }
+    .sidebar-label:first-child { margin-top: 0; }
+    .sidebar-btn {
+      display: flex; align-items: center; gap: 10px;
+      background: transparent; border: none;
+      border-radius: 10px; padding: 11px 14px;
+      color: rgba(255,255,255,0.80); font-family: 'Inter', sans-serif;
+      font-size: 0.88rem; font-weight: 500; cursor: pointer;
+      text-align: left; width: 100%;
+      transition: background 0.18s, color 0.18s;
+    }
+    .sidebar-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .sidebar-btn.active { background: rgba(255,255,255,0.18); color: #fff; font-weight: 700; }
+    .sidebar-icon { font-size: 1.05rem; flex-shrink: 0; }
+
+    /* ── MAIN ── */
+    .main { flex: 1; padding: 32px 36px; overflow-y: auto; }
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+
+    /* ── PAGE HEADER ── */
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-size: 1.5rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+    .page-header p { font-size: 0.9rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── STAT CARDS ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--card); border-radius: 14px;
+      padding: 22px 20px; box-shadow: var(--shadow);
+      border: 1px solid rgba(79,99,245,0.08);
+      opacity: 0; transform: translateY(18px);
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(79,99,245,0.14); }
+    .stat-icon { font-size: 1.6rem; margin-bottom: 12px; }
+    .stat-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+    .stat-sub { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card); border-radius: 14px;
+      box-shadow: var(--shadow); border: 1px solid rgba(79,99,245,0.08);
+      margin-bottom: 22px; overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 22px; display: flex; align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(79,99,245,0.08);
+    }
+    .card-title { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th {
+      padding: 11px 20px; text-align: left;
+      font-size: 0.70rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted);
+      border-bottom: 1px solid rgba(79,99,245,0.08);
+      background: rgba(79,99,245,0.03);
+    }
+    tbody tr { border-bottom: 1px solid rgba(79,99,245,0.05); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(79,99,245,0.03); }
+    td { padding: 13px 20px; color: var(--muted); }
+    td:first-child { color: var(--text); font-weight: 600; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+    .badge-active   { background: rgba(34,197,94,0.12);  color: #16a34a; }
+    .badge-inactive { background: rgba(239,68,68,0.12);  color: #dc2626; }
+    .badge-open     { background: rgba(245,158,11,0.12); color: #d97706; }
+    .badge-inprogress{ background: rgba(79,99,245,0.12); color: var(--blue); }
+    .badge-resolved { background: rgba(34,197,94,0.12);  color: #16a34a; }
+    .badge-closed   { background: rgba(107,114,128,0.12);color: #6b7280; }
+    .badge-paid     { background: rgba(34,197,94,0.12);  color: #16a34a; }
+    .badge-unpaid   { background: rgba(239,68,68,0.12);  color: #dc2626; }
+    .badge-overdue  { background: rgba(239,68,68,0.20);  color: #b91c1c; }
+    .badge-high     { background: rgba(239,68,68,0.12);  color: #dc2626; }
+    .badge-medium   { background: rgba(245,158,11,0.12); color: #d97706; }
+    .badge-low      { background: rgba(34,197,94,0.12);  color: #16a34a; }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      border: none; border-radius: 10px; padding: 10px 20px;
+      color: #fff; font-family: 'Inter', sans-serif;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-sm {
+      padding: 5px 12px; border-radius: 7px; font-size: 0.78rem;
+      font-weight: 600; border: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: opacity 0.2s;
+    }
+    .btn-view { background: rgba(79,99,245,0.10); color: var(--blue); }
+
+    /* ── TICKET FORM ── */
+    .ticket-form { padding: 24px 22px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 0.80rem; font-weight: 700; color: var(--muted); margin-bottom: 7px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .form-control {
+      width: 100%; background: var(--bg);
+      border: 1px solid rgba(79,99,245,0.18);
+      border-radius: 10px; padding: 11px 14px;
+      color: var(--text); font-family: 'Inter', sans-serif;
+      font-size: 0.92rem; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(79,99,245,0.10); }
+    .form-control option { background: #fff; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* ── SUBSCRIPTION CARD ── */
+    .sub-card {
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      border-radius: 16px; padding: 28px 28px; color: #fff;
+      margin-bottom: 22px; position: relative; overflow: hidden;
+    }
+    .sub-card::after {
+      content: ''; position: absolute; right: -30px; top: -30px;
+      width: 160px; height: 160px; border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+    }
+    .sub-package { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; margin-bottom: 8px; }
+    .sub-name { font-size: 1.6rem; font-weight: 800; margin-bottom: 16px; }
+    .sub-details { display: flex; gap: 28px; flex-wrap: wrap; }
+    .sub-detail-item { }
+    .sub-detail-label { font-size: 0.72rem; opacity: 0.70; margin-bottom: 3px; }
+    .sub-detail-value { font-size: 0.95rem; font-weight: 600; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.92rem; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: #16a34a; color: #fff;
+      padding: 14px 22px; border-radius: 12px;
+      font-size: 0.9rem; font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      display: none; z-index: 999;
+    }
+
+    @@media (max-width: 960px) { .stat-grid { grid-template-columns: 1fr 1fr; } }
+    @@media (max-width: 640px) {
+      .sidebar { width: 60px; }
+      .sidebar-btn span:not(.sidebar-icon) { display: none; }
+      .sidebar-label { display: none; }
+      .main { padding: 18px 14px; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-brand">MAUNO POS</div>
+    <div class="topbar-right">
+      <div class="topbar-avatar">@(User.Identity?.Name?.Substring(0,1).ToUpper() ?? "C")</div>
+      <span class="topbar-name">@User.Identity?.Name</span>
+      <form method="post" asp-controller="Auth" asp-action="Logout" style="display:inline;">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="topbar-logout">Logout</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-label">My Portal</div>
+      <button class="sidebar-btn active" data-section="overview">
+        <span class="sidebar-icon">🏠</span><span>Overview</span>
+      </button>
+      <button class="sidebar-btn" data-section="devices">
+        <span class="sidebar-icon">🖥️</span><span>My Devices</span>
+      </button>
+      <button class="sidebar-btn" data-section="tickets">
+        <span class="sidebar-icon">🎫</span><span>Support Tickets</span>
+      </button>
+      <div class="sidebar-label">Billing</div>
+      <button class="sidebar-btn" data-section="subscription">
+        <span class="sidebar-icon">📋</span><span>Subscription</span>
+      </button>
+      <button class="sidebar-btn" data-section="invoices">
+        <span class="sidebar-icon">🧾</span><span>Invoices</span>
+      </button>
+      <div class="sidebar-label">Software</div>
+      <button class="sidebar-btn" data-section="downloads">
+        <span class="sidebar-icon">⬇️</span><span>Downloads</span>
+      </button>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <!-- ── OVERVIEW ── -->
+      <section class="page-section active" id="section-overview">
+        <div class="page-header">
+          <h1>Welcome back, @(Model?.OwnerName ?? User.Identity?.Name) 👋</h1>
+          <p>Here's a summary of your MaunoPOS account</p>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon">🖥️</div>
+            <div class="stat-label">My Devices</div>
+            <div class="stat-value">@ViewBag.TotalDevices</div>
+            <div class="stat-sub">POS terminals</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🎫</div>
+            <div class="stat-label">Open Tickets</div>
+            <div class="stat-value">@ViewBag.OpenTickets</div>
+            <div class="stat-sub">Awaiting resolution</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-label">Subscription</div>
+            <div class="stat-value">@(ViewBag.ActiveSubscription != null ? "Active" : "None")</div>
+            <div class="stat-sub">@(ViewBag.ActiveSubscription?.Package ?? "No active plan")</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🧾</div>
+            <div class="stat-label">Unpaid Invoices</div>
+            <div class="stat-value">@ViewBag.UnpaidInvoices</div>
+            <div class="stat-sub">Requires attention</div>
+          </div>
+        </div>
+
+        <!-- Recent Tickets -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Support Tickets</span>
+            <button class="btn-primary" id="btn-quick-ticket">+ New Ticket</button>
+          </div>
+          @if (Model?.SupportTickets?.Any() == true)
+          {
+            <table>
+              <thead><tr><th>Ticket #</th><th>Subject</th><th>Priority</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                @foreach (var t in Model.SupportTickets.OrderByDescending(x => x.CreatedDate).Take(5))
+                {
+                  <tr>
+                    <td>#@t.TicketId</td>
+                    <td>@t.Subject</td>
+                    <td><span class="badge badge-@t.Priority.ToLower()">@t.Priority</span></td>
+                    <td><span class="badge badge-@t.Status.ToLower().Replace(" ","")">@t.Status</span></td>
+                    <td>@t.CreatedDate.ToString("dd MMM yyyy")</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+          else
+          {
+            <div class="empty-state">
+              <div class="empty-icon">🎫</div>
+              <p>No tickets yet. Click <strong>New Ticket</strong> if you need help.</p>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- ── MY DEVICES ── -->
+      <section class="page-section" id="section-devices">
+        <div class="page-header">
+          <h1>My Devices</h1>
+          <p>All POS terminals registered under your account</p>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">POS Terminals</span></div>
+          @if (Model?.Branches?.Any() == true && Model.Branches.Any(b => b.Devices.Any()))
+          {
+            <table>
+              <thead><tr><th>Serial No</th><th>Branch</th><th>Device Type</th><th>Version</th><th>Install Date</th><th>Status</th></tr></thead>
+              <tbody>
+                @foreach (var branch in Model.Branches)
+                {
+                  @foreach (var device in branch.Devices)
+                  {
+                    <tr>
+                      <td>@device.SerialNumber</td>
+                      <td>@branch.BranchName</td>
+                      <td>@device.DeviceType</td>
+                      <td>@device.VersionInstalled</td>
+                      <td>@device.InstallationDate.ToString("dd MMM yyyy")</td>
+                      <td><span class="badge badge-@device.Status.ToLower()">@device.Status</span></td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          }
+          else
+          {
+            <div class="empty-state">
+              <div class="empty-icon">🖥️</div>
+              <p>No devices registered yet. Contact support to get started.</p>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- ── SUPPORT TICKETS ── -->
+      <section class="page-section" id="section-tickets">
+        <div class="page-header">
+          <h1>Support Tickets</h1>
+          <p>Submit and track your support requests</p>
+        </div>
+
+        <!-- Submit Ticket Form -->
+        <div class="card" id="ticket-form-card">
+          <div class="card-header">
+            <span class="card-title">Submit a New Ticket</span>
+          </div>
+          <div class="ticket-form">
+            <form asp-controller="ClientPortal" asp-action="SubmitTicket" method="post">
+              @Html.AntiForgeryToken()
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Subject</label>
+                  <input class="form-control" type="text" name="Subject" placeholder="Brief description of the issue" required/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Priority</label>
+                  <select class="form-control" name="Priority">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" name="Description" rows="3" placeholder="Describe the issue in detail…" style="resize:vertical;" required></textarea>
+              </div>
+              <button type="submit" class="btn-primary">Submit Ticket</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Tickets List -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">My Tickets</span></div>
+          @if (Model?.SupportTickets?.Any() == true)
+          {
+            <table>
+              <thead><tr><th>Ticket #</th><th>Subject</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Date</th></tr></thead>
+              <tbody>
+                @foreach (var t in Model.SupportTickets.OrderByDescending(x => x.CreatedDate))
+                {
+                  <tr>
+                    <td>#@t.TicketId</td>
+                    <td>@t.Subject</td>
+                    <td><span class="badge badge-@t.Priority.ToLower()">@t.Priority</span></td>
+                    <td><span class="badge badge-@t.Status.ToLower().Replace(" ","")">@t.Status</span></td>
+                    <td>@(t.AssignedToUser?.Username ?? "—")</td>
+                    <td>@t.CreatedDate.ToString("dd MMM yyyy")</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+          else
+          {
+            <div class="empty-state">
+              <div class="empty-icon">✅</div>
+              <p>No tickets yet — everything is running smoothly!</p>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- ── SUBSCRIPTION ── -->
+      <section class="page-section" id="section-subscription">
+        <div class="page-header">
+          <h1>My Subscription</h1>
+          <p>Your current plan and billing details</p>
+        </div>
+        @if (ViewBag.ActiveSubscription != null)
+        {
+          var sub = ViewBag.ActiveSubscription as MaunoWeb.Models.Subscription;
+          <div class="sub-card">
+            <div class="sub-package">Current Plan</div>
+            <div class="sub-name">@sub.Package</div>
+            <div class="sub-details">
+              <div class="sub-detail-item">
+                <div class="sub-detail-label">Amount</div>
+                <div class="sub-detail-value">R @sub.Amount/pm</div>
+              </div>
+              <div class="sub-detail-item">
+                <div class="sub-detail-label">Start Date</div>
+                <div class="sub-detail-value">@sub.StartDate.ToString("dd MMM yyyy")</div>
+              </div>
+              <div class="sub-detail-item">
+                <div class="sub-detail-label">Expiry Date</div>
+                <div class="sub-detail-value">@sub.ExpiryDate.ToString("dd MMM yyyy")</div>
+              </div>
+              <div class="sub-detail-item">
+                <div class="sub-detail-label">Status</div>
+                <div class="sub-detail-value">@sub.Status</div>
+              </div>
+            </div>
+          </div>
+        }
+        else
+        {
+          <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <p>No active subscription. Contact us at <strong>maunopossa@yahoo.com</strong> to get started.</p>
+          </div>
+        }
+        <div class="card">
+          <div class="card-header"><span class="card-title">Available Plans</span></div>
+          <table>
+            <thead><tr><th>Plan</th><th>Licences</th><th>Updates</th><th>Price</th></tr></thead>
+            <tbody>
+              <tr><td>Trial</td><td>1</td><td>Limited</td><td>Free (14 days)</td></tr>
+              <tr><td>Standard</td><td>2</td><td>Limited</td><td>R1,200/pm</td></tr>
+              <tr><td>Premium</td><td>5</td><td>Unlimited</td><td>R2,000/pm</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── INVOICES ── -->
+      <section class="page-section" id="section-invoices">
+        <div class="page-header">
+          <h1>Invoices</h1>
+          <p>Your payment history and outstanding invoices</p>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Payment History</span></div>
+          @if (Model?.Payments?.Any() == true)
+          {
+            <table>
+              <thead><tr><th>Invoice #</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+              <tbody>
+                @foreach (var p in Model.Payments.OrderByDescending(x => x.PaymentDate))
+                {
+                  <tr>
+                    <td>@p.InvoiceNumber</td>
+                    <td>R @p.Amount.ToString("N2")</td>
+                    <td>@p.PaymentDate.ToString("dd MMM yyyy")</td>
+                    <td><span class="badge badge-@p.Status.ToLower()">@p.Status</span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+          else
+          {
+            <div class="empty-state">
+              <div class="empty-icon">🧾</div>
+              <p>No invoices yet.</p>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- ── DOWNLOADS ── -->
+      <section class="page-section" id="section-downloads">
+        <div class="page-header">
+          <h1>Downloads</h1>
+          <p>Latest software updates, installers and manuals</p>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Available Downloads</span></div>
+          <table>
+            <thead><tr><th>Version</th><th>Type</th><th>Description</th><th>Release Date</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td>v3.5</td><td>Installer</td><td>Full installer with new payment gateway</td>
+                <td>01 Jun 2025</td>
+                <td><button class="btn-sm btn-view">⬇ Download</button></td>
+              </tr>
+              <tr>
+                <td>v3.4.1</td><td>Patch</td><td>Critical bug fix for receipt printing</td>
+                <td>15 Apr 2025</td>
+                <td><button class="btn-sm btn-view">⬇ Download</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  @if (TempData["Success"] != null)
+  {
+    <script>$(function(){ showToast('@TempData["Success"]'); });</script>
+  }
+
+  <script>
+    $(function () {
+
+      // ── Stat cards animate in ──
+      $('.stat-card').each(function (i) {
+        const $c = $(this);
+        setTimeout(function () {
+          $c.animate({ opacity: 1 }, {
+            duration: 350,
+            step: function (now) { $c.css('transform', 'translateY(' + (18 - now * 18) + 'px)'); },
+            complete: function () { $c.css('transform', 'translateY(0)'); }
+          });
+        }, i * 90);
+      });
+
+      // ── Sidebar navigation ──
+      $('.sidebar-btn').on('click', function () {
+        const section = $(this).data('section');
+        $('.sidebar-btn').removeClass('active');
+        $(this).addClass('active');
+        $('.page-section').removeClass('active');
+        $('#section-' + section).addClass('active');
+      });
+
+      // ── Quick ticket button on overview ──
+      $('#btn-quick-ticket').on('click', function () {
+        $('.sidebar-btn[data-section="tickets"]').trigger('click');
+        setTimeout(function () {
+          $('html, body').animate({ scrollTop: $('#ticket-form-card').offset().top - 80 }, 400);
+        }, 100);
+      });
+
+      // ── Toast ──
+      window.showToast = function (msg) {
+        $('#toast').text('✓ ' + msg).fadeIn(200);
+        setTimeout(function () { $('#toast').fadeOut(400); }, 3000);
+      };
+
+    });
+  </script>
+
+</body>
+</html>

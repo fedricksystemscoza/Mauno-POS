@@ -1,0 +1,245 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Sign Up";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mauno POS — Sign Up</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .register-card {
+            background: #a8a8a8;
+            border-radius: 18px;
+            width: 620px;
+            padding: 50px 50px 44px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transform: scale(0.96);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        .input-wrap {
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .input-wrap input,
+        .input-wrap select {
+            width: 100%;
+            background: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 20px 32px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            color: #111;
+            outline: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: box-shadow 0.2s;
+            appearance: none;
+        }
+
+        .input-wrap input::placeholder { color: #555; }
+
+        .input-wrap input:focus,
+        .input-wrap select:focus {
+            box-shadow: 0 0 0 3px rgba(100,120,255,0.25), 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .btn-register {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            margin-top: 6px;
+            background: linear-gradient(135deg, #4B6FFF, #3db8e8);
+            border: none;
+            border-radius: 999px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(75,111,255,0.35);
+            transition: opacity 0.2s, transform 0.15s;
+        }
+
+        .btn-register:hover { opacity: 0.92; transform: translateY(-2px); }
+        .btn-register:active { transform: translateY(0); }
+
+        .error-msg {
+            color: #c0392b;
+            font-size: 0.85rem;
+            text-align: center;
+            margin: 8px 0 4px;
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+        .login-links {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .login-links a {
+            font-size: 0.95rem;
+            text-decoration: none;
+            color: #111;
+        }
+
+        .login-links a span { color: #4B6FFF; }
+        .login-links a:hover { text-decoration: underline; }
+
+        @@media (max-width: 660px) {
+            .register-card { width: 94vw; padding: 36px 20px 32px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="register-card" id="registerCard">
+
+        <div class="card-title">Create Account</div>
+
+        <form asp-controller="Auth" asp-action="Register" method="post" style="width:100%;">
+            @Html.AntiForgeryToken()
+
+            <div class="input-wrap">
+                <input type="text"
+                       name="Username"
+                       placeholder="Username"
+                       autocomplete="username" />
+            </div>
+
+            <div class="input-wrap">
+                <input type="email"
+                       name="Email"
+                       placeholder="Email Address"
+                       autocomplete="email" />
+            </div>
+
+            <div class="input-wrap">
+                <input type="password"
+                       name="Password"
+                       id="password"
+                       placeholder="Password"
+                       autocomplete="new-password" />
+            </div>
+
+            <div class="input-wrap">
+                <input type="password"
+                       name="ConfirmPassword"
+                       id="confirmPassword"
+                       placeholder="Confirm Password"
+                       autocomplete="new-password" />
+            </div>
+
+            <div class="input-wrap">
+                <select name="Role">
+                    <option value="" disabled selected>Select Role</option>
+                    <option value="Admin">Admin</option>
+                    <option value="SupportStaff">Support Staff</option>
+                    <option value="Client">Client</option>
+                </select>
+            </div>
+
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <div class="error-msg">@ViewBag.ErrorMessage</div>
+            }
+            else
+            {
+                <div class="error-msg"></div>
+            }
+
+            <button type="submit" class="btn-register">Create Account</button>
+
+            <div class="login-links">
+                <a asp-controller="Auth" asp-action="Login">
+                    Already have an account? <span>Login</span>
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+    <script>
+        $(function () {
+            $('#registerCard').delay(100).animate({ opacity: 1 }, {
+                duration: 400,
+                step: function (now) {
+                    $(this).css('transform', 'scale(' + (0.96 + now * 0.04) + ')');
+                },
+                complete: function () { $(this).css('transform', 'scale(1)'); }
+            });
+
+            $('input, select').on('focus', function () {
+                $(this).closest('.input-wrap').stop(true).animate({ marginBottom: '18px' }, 150);
+            }).on('blur', function () {
+                $(this).closest('.input-wrap').stop(true).animate({ marginBottom: '16px' }, 150);
+            });
+
+            // Client-side password match check
+            $('form').on('submit', function (e) {
+                const p  = $('#password').val();
+                const cp = $('#confirmPassword').val();
+                if (p !== cp) {
+                    e.preventDefault();
+                    $('.error-msg').text('Passwords do not match.');
+                    shakeCard();
+                }
+            });
+
+            function shakeCard() {
+                let count = 0;
+                const interval = setInterval(function () {
+                    $('#registerCard').css('margin-left', count % 2 === 0 ? '10px' : '-10px');
+                    count++;
+                    if (count > 5) { clearInterval(interval); $('#registerCard').css('margin-left', '0'); }
+                }, 55);
+            }
+
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <text>
+                setTimeout(function () {
+                    let count = 0;
+                    const interval = setInterval(function () {
+                        $('#registerCard').css('margin-left', count % 2 === 0 ? '10px' : '-10px');
+                        count++;
+                        if (count > 5) { clearInterval(interval); $('#registerCard').css('margin-left', '0'); }
+                    }, 55);
+                }, 450);
+                </text>
+            }
+        });
+    </script>
+
+</body>
+</html>

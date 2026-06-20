@@ -1,0 +1,858 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Mauno POS — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --sidebar-bg: #4f63f5;
+            --sidebar-btn: linear-gradient(135deg, #3db8e8, #4f63f5);
+            --topbar-bg: #b0b0b0;
+            --main-bg: #111;
+            --text-light: #fff;
+            --text-dark: #111;
+            --card-bg: #1e1e1e;
+            --card-border: rgba(255,255,255,0.07);
+            --accent: #3db8e8;
+            --accent2: #4f63f5;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--main-bg);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            background: var(--topbar-bg);
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 28px;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .topbar-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: #333;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            overflow: hidden;
+        }
+
+        .topbar-avatar svg {
+            width: 28px; height: 28px; fill: #555;
+        }
+
+        .topbar-name {
+            color: var(--text-dark);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .topbar-logout {
+            margin-left: 16px;
+            background: none;
+            border: 1px solid rgba(0,0,0,0.25);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.82rem;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .topbar-logout:hover { background: rgba(0,0,0,0.08); }
+
+        /* ── LAYOUT ── */
+        .layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 170px;
+            background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            padding: 16px 12px;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-btn {
+            background: var(--sidebar-btn);
+            border: none;
+            border-radius: 999px;
+            padding: 13px 12px;
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: opacity 0.2s, transform 0.15s;
+            display: block;
+            width: 100%;
+            text-decoration: none;
+        }
+
+        .sidebar-btn:hover { opacity: 0.88; transform: translateX(3px); }
+        .sidebar-btn.active { background: linear-gradient(135deg, #fff 0%, #e0e8ff 100%); color: var(--accent2); font-weight: 700; }
+
+        /* ── MAIN CONTENT ── */
+        .main {
+            flex: 1;
+            padding: 32px 36px;
+            overflow-y: auto;
+            background: var(--main-bg);
+        }
+
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+
+        /* ── SECTION HEADER ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            text-decoration: none;
+        }
+        .btn-primary:hover { opacity: 0.85; }
+
+        /* ── STAT CARDS ── */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 22px 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.45);
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .stat-sub {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .stat-icon {
+            font-size: 1.5rem;
+            float: right;
+            margin-top: -36px;
+        }
+
+        /* ── TABLE ── */
+        .table-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .table-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .search-input {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            padding: 7px 14px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            width: 200px;
+            transition: border-color 0.2s;
+        }
+        .search-input::placeholder { color: rgba(255,255,255,0.3); }
+        .search-input:focus { border-color: var(--accent); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        thead th {
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background 0.15s;
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.04); }
+
+        td { padding: 13px 20px; color: rgba(255,255,255,0.82); }
+        td:first-child { color: #fff; font-weight: 500; }
+
+        /* ── BADGES ── */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+        .badge-active    { background: rgba(34,197,94,0.15);  color: #22c55e; }
+        .badge-inactive  { background: rgba(239,68,68,0.15);  color: #ef4444; }
+        .badge-open      { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .badge-resolved  { background: rgba(34,197,94,0.15);  color: #22c55e; }
+        .badge-inprogress{ background: rgba(63,99,245,0.20);  color: #818cf8; }
+        .badge-paid      { background: rgba(34,197,94,0.15);  color: #22c55e; }
+        .badge-unpaid    { background: rgba(239,68,68,0.15);  color: #ef4444; }
+        .badge-overdue   { background: rgba(239,68,68,0.25);  color: #fca5a5; }
+        .badge-high      { background: rgba(239,68,68,0.15);  color: #ef4444; }
+        .badge-medium    { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .badge-low       { background: rgba(34,197,94,0.15);  color: #22c55e; }
+
+        /* ── ACTION BUTTONS ── */
+        .btn-sm {
+            padding: 5px 12px;
+            border-radius: 7px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: opacity 0.2s;
+        }
+        .btn-sm:hover { opacity: 0.80; }
+        .btn-edit   { background: rgba(63,99,245,0.25); color: #818cf8; }
+        .btn-delete { background: rgba(239,68,68,0.20); color: #ef4444; }
+        .btn-view   { background: rgba(61,184,232,0.20); color: #3db8e8; }
+
+        /* ── FORM CARD ── */
+        .form-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 28px 28px;
+            max-width: 640px;
+        }
+
+        .form-group { margin-bottom: 18px; }
+        .form-label { display: block; font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.55); margin-bottom: 7px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+        .form-control {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 9px;
+            padding: 11px 14px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.92rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus { border-color: var(--accent); }
+        .form-control option { background: #222; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* ── SUCCESS TOAST ── */
+        .toast {
+            position: fixed; bottom: 28px; right: 28px;
+            background: #22c55e; color: #fff;
+            padding: 14px 22px; border-radius: 12px;
+            font-size: 0.9rem; font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            display: none; z-index: 999;
+        }
+    </style>
+    <style>
+        @@media (max-width: 960px) {
+        .stat-grid {
+        grid-template-columns: 1fr 1fr;
+        }
+
+        .sidebar {
+        width: 140px;
+        }
+        }
+        @@media (max-width: 640px) {
+        .sidebar {
+        width: 110px;
+        }
+
+        .main {
+        padding: 18px 14px;
+        }
+
+        .stat-grid {
+        grid-template-columns: 1fr 1fr;
+        }
+
+        .form-row {
+        grid-template-columns: 1fr;
+        }
+    </style>
+
+</head>
+<body>
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="topbar-avatar">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+        </div>
+        <span class="topbar-name">@(User.Identity?.Name ?? "Admin")</span>
+        <form method="post" asp-controller="Auth" asp-action="Logout" style="display:inline;">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="topbar-logout">Logout</button>
+        </form>
+    </div>
+
+    <div class="layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <button class="sidebar-btn active" data-section="dashboard">Dashboard</button>
+            <button class="sidebar-btn" data-section="clients">Clients</button>
+            <button class="sidebar-btn" data-section="installations">Installations</button>
+            <button class="sidebar-btn" data-section="tickets">Support Tickets</button>
+            <button class="sidebar-btn" data-section="subscriptions">Subscriptions</button>
+            <button class="sidebar-btn" data-section="updates">Software Updates</button>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main">
+
+            <!-- ── DASHBOARD ── -->
+            <section class="page-section active" id="section-dashboard">
+                <div class="section-header">
+                    <h1 class="section-title">Dashboard</h1>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Clients</div>
+                        <div class="stat-value" id="stat-clients">@ViewBag.TotalClients</div>
+                        <div class="stat-sub">Registered clients</div>
+                        <div class="stat-icon">👥</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Subscriptions</div>
+                        <div class="stat-value" id="stat-subs">@ViewBag.ActiveSubscriptions</div>
+                        <div class="stat-sub">Currently active</div>
+                        <div class="stat-icon">📋</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Open Tickets</div>
+                        <div class="stat-value" id="stat-tickets">@ViewBag.OpenTickets</div>
+                        <div class="stat-sub">Awaiting resolution</div>
+                        <div class="stat-icon">🎫</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Monthly Revenue</div>
+                        <div class="stat-value" id="stat-revenue">R @ViewBag.MonthlyRevenue</div>
+                        <div class="stat-sub">This month</div>
+                        <div class="stat-icon">💰</div>
+                    </div>
+                </div>
+
+                <!-- Recent Tickets -->
+                <div class="table-wrap">
+                    <div class="table-header">
+                        <span class="table-title">Recent Support Tickets</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticket #</th>
+                                <th>Client</th>
+                                <th>Subject</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-tickets-body">
+                            <!-- Populated via AJAX or Razor loop in production -->
+                            <tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.3);padding:28px;">No recent tickets</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ── CLIENTS ── -->
+            <section class="page-section" id="section-clients">
+                <div class="section-header">
+                    <h1 class="section-title">Clients</h1>
+                    <button class="btn-primary" id="btn-add-client">+ Add Client</button>
+                </div>
+
+                <!-- Add Client Form (hidden by default) -->
+                <div class="form-card" id="add-client-form" style="display:none;margin-bottom:28px;">
+                    <h3 style="margin-bottom:20px;font-size:1rem;">New Client</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Company Name</label>
+                            <input class="form-control" type="text" id="f-company" placeholder="e.g. ABC Supermarket"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Owner Name</label>
+                            <input class="form-control" type="text" id="f-owner" placeholder="e.g. John Smith"/>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input class="form-control" type="email" id="f-email" placeholder="email@company.com"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input class="form-control" type="text" id="f-phone" placeholder="0XX XXX XXXX"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Address</label>
+                        <input class="form-control" type="text" id="f-address" placeholder="Physical address"/>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:6px;">
+                        <button class="btn-primary" id="btn-save-client">Save Client</button>
+                        <button class="btn-sm btn-delete" id="btn-cancel-client" style="padding:9px 16px;">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <div class="table-header">
+                        <span class="table-title">All Clients</span>
+                        <input class="search-input" type="text" id="client-search" placeholder="Search clients…"/>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Client ID</th>
+                                <th>Company</th>
+                                <th>Owner</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clients-body">
+                            <tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,0.3);padding:28px;">No clients yet</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ── INSTALLATIONS ── -->
+            <section class="page-section" id="section-installations">
+                <div class="section-header">
+                    <h1 class="section-title">Installations</h1>
+                    <button class="btn-primary">+ Add Device</button>
+                </div>
+                <div class="table-wrap">
+                    <div class="table-header">
+                        <span class="table-title">POS Devices</span>
+                        <input class="search-input" type="text" placeholder="Search devices…"/>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Serial No</th>
+                                <th>Branch</th>
+                                <th>Device Type</th>
+                                <th>Version</th>
+                                <th>Install Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>POS001</td><td>ABC Supermarket - Main</td><td>POS Terminal</td>
+                                <td>v3.2</td><td>2025-01-15</td>
+                                <td><span class="badge badge-active">Active</span></td>
+                                <td><button class="btn-sm btn-view">View</button> <button class="btn-sm btn-edit">Edit</button></td>
+                            </tr>
+                            <tr>
+                                <td>POS002</td><td>Fresh Foods - Branch 1</td><td>POS Terminal</td>
+                                <td>v3.4</td><td>2025-03-10</td>
+                                <td><span class="badge badge-active">Active</span></td>
+                                <td><button class="btn-sm btn-view">View</button> <button class="btn-sm btn-edit">Edit</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ── SUPPORT TICKETS ── -->
+            <section class="page-section" id="section-tickets">
+                <div class="section-header">
+                    <h1 class="section-title">Support Tickets</h1>
+                    <button class="btn-primary" id="btn-add-ticket">+ New Ticket</button>
+                </div>
+
+                <!-- New Ticket Form -->
+                <div class="form-card" id="add-ticket-form" style="display:none;margin-bottom:28px;">
+                    <h3 style="margin-bottom:20px;font-size:1rem;">New Support Ticket</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Client</label>
+                            <select class="form-control" id="f-ticket-client">
+                                <option value="">Select client…</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Priority</label>
+                            <select class="form-control" id="f-ticket-priority">
+                                <option>Low</option>
+                                <option selected>Medium</option>
+                                <option>High</option>
+                                <option>Critical</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Subject</label>
+                        <input class="form-control" type="text" id="f-ticket-subject" placeholder="Brief description of the issue"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="f-ticket-desc" rows="3" placeholder="Detailed description…" style="resize:vertical;"></textarea>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:6px;">
+                        <button class="btn-primary" id="btn-save-ticket">Submit Ticket</button>
+                        <button class="btn-sm btn-delete" id="btn-cancel-ticket" style="padding:9px 16px;">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <div class="table-header">
+                        <span class="table-title">All Tickets</span>
+                        <input class="search-input" type="text" id="ticket-search" placeholder="Search tickets…"/>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticket #</th>
+                                <th>Client</th>
+                                <th>Subject</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tickets-body">
+                            <tr>
+                                <td>#105</td><td>ABC Supermarket</td><td>Receipt printer not printing</td>
+                                <td><span class="badge badge-high">High</span></td>
+                                <td><span class="badge badge-open">Open</span></td>
+                                <td>2025-06-10</td>
+                                <td><button class="btn-sm btn-view">View</button> <button class="btn-sm btn-edit">Assign</button></td>
+                            </tr>
+                            <tr>
+                                <td>#104</td><td>Fresh Foods</td><td>Cannot process card payments</td>
+                                <td><span class="badge badge-medium">Medium</span></td>
+                                <td><span class="badge badge-inprogress">In Progress</span></td>
+                                <td>2025-06-08</td>
+                                <td><button class="btn-sm btn-view">View</button> <button class="btn-sm btn-edit">Assign</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ── SUBSCRIPTIONS ── -->
+            <section class="page-section" id="section-subscriptions">
+                <div class="section-header">
+                    <h1 class="section-title">Subscriptions</h1>
+                    <button class="btn-primary">+ New Subscription</button>
+                </div>
+                <div class="table-wrap">
+                    <div class="table-header">
+                        <span class="table-title">All Subscriptions</span>
+                        <input class="search-input" type="text" placeholder="Search…"/>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Package</th>
+                                <th>Start Date</th>
+                                <th>Expiry Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ABC Supermarket</td><td>Premium</td><td>2025-01-01</td>
+                                <td>2025-12-31</td><td>R 1,500</td>
+                                <td><span class="badge badge-active">Active</span></td>
+                                <td><button class="btn-sm btn-edit">Edit</button> <button class="btn-sm btn-delete">Suspend</button></td>
+                            </tr>
+                            <tr>
+                                <td>Fresh Foods</td><td>Standard</td><td>2025-03-01</td>
+                                <td>2025-09-01</td><td>R 800</td>
+                                <td><span class="badge badge-active">Active</span></td>
+                                <td><button class="btn-sm btn-edit">Edit</button> <button class="btn-sm btn-delete">Suspend</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ── SOFTWARE UPDATES ── -->
+            <section class="page-section" id="section-updates">
+                <div class="section-header">
+                    <h1 class="section-title">Software Updates</h1>
+                    <button class="btn-primary">+ Publish Update</button>
+                </div>
+                <div class="table-wrap">
+                    <div class="table-header">
+                        <span class="table-title">Available Updates</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Version</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Release Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>v3.5</td><td>Installer</td><td>Full installer with new payment gateway</td>
+                                <td>2025-06-01</td>
+                                <td><button class="btn-sm btn-view">Download</button> <button class="btn-sm btn-delete">Deactivate</button></td>
+                            </tr>
+                            <tr>
+                                <td>v3.4.1</td><td>Patch</td><td>Critical bug fix for receipt printing</td>
+                                <td>2025-04-15</td>
+                                <td><button class="btn-sm btn-view">Download</button> <button class="btn-sm btn-delete">Deactivate</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">✓ Saved successfully</div>
+
+    <script>
+        $(function () {
+
+            // ── Animate stat cards in ──
+            $('.stat-card').each(function (i) {
+                const $c = $(this);
+                setTimeout(() => {
+                    $c.animate({ opacity: 1 }, {
+                        duration: 350,
+                        step: function (now) { $c.css('transform', `translateY(${20 - now * 20}px)`); },
+                        complete: function () { $c.css('transform', 'translateY(0)'); }
+                    });
+                }, i * 100);
+            });
+
+            // ── Sidebar navigation ──
+            $('.sidebar-btn').on('click', function () {
+                const section = $(this).data('section');
+                $('.sidebar-btn').removeClass('active');
+                $(this).addClass('active');
+                $('.page-section').removeClass('active');
+                $('#section-' + section).addClass('active');
+            });
+
+            // ── Add Client toggle ──
+            $('#btn-add-client').on('click', function () {
+                $('#add-client-form').slideDown(200);
+                $(this).hide();
+            });
+            $('#btn-cancel-client').on('click', function () {
+                $('#add-client-form').slideUp(200);
+                $('#btn-add-client').show();
+            });
+
+            // ── Save Client (front-end demo) ──
+            $('#btn-save-client').on('click', function () {
+                const company = $('#f-company').val().trim();
+                const owner   = $('#f-owner').val().trim();
+                const email   = $('#f-email').val().trim();
+                const phone   = $('#f-phone').val().trim();
+                if (!company || !owner || !email) { alert('Please fill in Company, Owner and Email.'); return; }
+
+                const count = $('#clients-body tr').length;
+                const code  = 'C' + String(count + 1).padStart(3, '0');
+                const row   = `<tr>
+                    <td>${code}</td><td>${company}</td><td>${owner}</td>
+                    <td>${email}</td><td>${phone || '—'}</td>
+                    <td><span class="badge badge-active">Active</span></td>
+                    <td>
+                        <button class="btn-sm btn-view">View</button>
+                        <button class="btn-sm btn-edit">Edit</button>
+                        <button class="btn-sm btn-delete">Delete</button>
+                    </td>
+                </tr>`;
+
+                // Remove "no clients" placeholder
+                if ($('#clients-body tr td[colspan]').length) $('#clients-body').empty();
+
+                $('#clients-body').prepend(row);
+                $('#add-client-form input').val('');
+                $('#add-client-form').slideUp(200);
+                $('#btn-add-client').show();
+                showToast('Client ' + company + ' added!');
+            });
+
+            // ── Add Ticket toggle ──
+            $('#btn-add-ticket').on('click', function () {
+                $('#add-ticket-form').slideDown(200);
+                $(this).hide();
+            });
+            $('#btn-cancel-ticket').on('click', function () {
+                $('#add-ticket-form').slideUp(200);
+                $('#btn-add-ticket').show();
+            });
+
+            // ── Save Ticket (front-end demo) ──
+            $('#btn-save-ticket').on('click', function () {
+                const subject  = $('#f-ticket-subject').val().trim();
+                const priority = $('#f-ticket-priority').val();
+                if (!subject) { alert('Please enter a subject.'); return; }
+
+                const ticketNum = '#' + (100 + Math.floor(Math.random() * 900));
+                const pClass = priority.toLowerCase();
+                const row = `<tr>
+                    <td>${ticketNum}</td><td>—</td><td>${subject}</td>
+                    <td><span class="badge badge-${pClass}">${priority}</span></td>
+                    <td><span class="badge badge-open">Open</span></td>
+                    <td>${new Date().toISOString().split('T')[0]}</td>
+                    <td><button class="btn-sm btn-view">View</button> <button class="btn-sm btn-edit">Assign</button></td>
+                </tr>`;
+
+                $('#tickets-body').prepend(row);
+                $('#add-ticket-form input, #add-ticket-form textarea, #add-ticket-form select').val('');
+                $('#add-ticket-form').slideUp(200);
+                $('#btn-add-ticket').show();
+                showToast('Ticket ' + ticketNum + ' created!');
+            });
+
+            // ── Client search filter ──
+            $('#client-search').on('input', function () {
+                const q = $(this).val().toLowerCase();
+                $('#clients-body tr').each(function () {
+                    $(this).toggle($(this).text().toLowerCase().includes(q));
+                });
+            });
+
+            // ── Ticket search filter ──
+            $('#ticket-search').on('input', function () {
+                const q = $(this).val().toLowerCase();
+                $('#tickets-body tr').each(function () {
+                    $(this).toggle($(this).text().toLowerCase().includes(q));
+                });
+            });
+
+            // ── Toast helper ──
+            function showToast(msg) {
+                $('#toast').text('✓ ' + msg).fadeIn(200);
+                setTimeout(() => $('#toast').fadeOut(400), 2800);
+            }
+
+        });
+    </script>
+
+</body>
+</html>
