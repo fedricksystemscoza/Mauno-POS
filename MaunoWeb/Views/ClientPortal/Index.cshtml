@@ -242,24 +242,24 @@
     <aside class="sidebar">
       <div class="sidebar-label">My Portal</div>
       <button class="sidebar-btn active" data-section="overview">
-        <span class="sidebar-icon">🏠</span><span>Overview</span>
+        <span class="sidebar-icon"></span><span>Overview</span>
       </button>
       <button class="sidebar-btn" data-section="devices">
-        <span class="sidebar-icon">🖥️</span><span>My Devices</span>
+        <span class="sidebar-icon"></span><span>My Devices</span>
       </button>
       <button class="sidebar-btn" data-section="tickets">
-        <span class="sidebar-icon">🎫</span><span>Support Tickets</span>
+        <span class="sidebar-icon"></span><span>Support Tickets</span>
       </button>
       <div class="sidebar-label">Billing</div>
       <button class="sidebar-btn" data-section="subscription">
-        <span class="sidebar-icon">📋</span><span>Subscription</span>
+        <span class="sidebar-icon"></span><span>Subscription</span>
       </button>
       <button class="sidebar-btn" data-section="invoices">
-        <span class="sidebar-icon">🧾</span><span>Invoices</span>
+        <span class="sidebar-icon"></span><span>Invoices</span>
       </button>
       <div class="sidebar-label">Software</div>
       <button class="sidebar-btn" data-section="downloads">
-        <span class="sidebar-icon">⬇️</span><span>Downloads</span>
+        <span class="sidebar-icon"></span><span>Downloads</span>
       </button>
     </aside>
 
@@ -275,25 +275,25 @@
 
         <div class="stat-grid">
           <div class="stat-card">
-            <div class="stat-icon">🖥️</div>
+            <div class="stat-icon"></div>
             <div class="stat-label">My Devices</div>
             <div class="stat-value">@ViewBag.TotalDevices</div>
             <div class="stat-sub">POS terminals</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">🎫</div>
+            <div class="stat-icon"></div>
             <div class="stat-label">Open Tickets</div>
             <div class="stat-value">@ViewBag.OpenTickets</div>
             <div class="stat-sub">Awaiting resolution</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">📋</div>
+            <div class="stat-icon"></div>
             <div class="stat-label">Subscription</div>
             <div class="stat-value">@(ViewBag.ActiveSubscription != null ? "Active" : "None")</div>
             <div class="stat-sub">@(ViewBag.ActiveSubscription?.Package ?? "No active plan")</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">🧾</div>
+            <div class="stat-icon"></div>
             <div class="stat-label">Unpaid Invoices</div>
             <div class="stat-value">@ViewBag.UnpaidInvoices</div>
             <div class="stat-sub">Requires attention</div>
@@ -327,7 +327,7 @@
           else
           {
             <div class="empty-state">
-              <div class="empty-icon">🎫</div>
+              <div class="empty-icon"></div>
               <p>No tickets yet. Click <strong>New Ticket</strong> if you need help.</p>
             </div>
           }
@@ -367,7 +367,7 @@
           else
           {
             <div class="empty-state">
-              <div class="empty-icon">🖥️</div>
+              <div class="empty-icon"></div>
               <p>No devices registered yet. Contact support to get started.</p>
             </div>
           }
@@ -438,7 +438,7 @@
           else
           {
             <div class="empty-state">
-              <div class="empty-icon">✅</div>
+              <div class="empty-icon"></div>
               <p>No tickets yet — everything is running smoothly!</p>
             </div>
           }
@@ -480,7 +480,7 @@
         else
         {
           <div class="empty-state">
-            <div class="empty-icon">📋</div>
+            <div class="empty-icon"></div>
             <p>No active subscription. Contact us at <strong>maunopossa@yahoo.com</strong> to get started.</p>
           </div>
         }
@@ -525,7 +525,7 @@
           else
           {
             <div class="empty-state">
-              <div class="empty-icon">🧾</div>
+              <div class="empty-icon"></div>
               <p>No invoices yet.</p>
             </div>
           }
