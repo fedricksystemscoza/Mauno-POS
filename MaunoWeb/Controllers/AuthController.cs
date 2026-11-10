@@ -25,9 +25,6 @@ namespace MaunoWeb.Controllers
             _logger = logger;
         }
 
-        // ─────────────────────────────────────────
-        // LOGIN
-        // ─────────────────────────────────────────
 
         [HttpGet]
         public IActionResult Login() => View();
@@ -120,9 +117,6 @@ namespace MaunoWeb.Controllers
             };
         }
 
-        // ─────────────────────────────────────────
-        // LOGOUT
-        // ─────────────────────────────────────────
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -132,10 +126,6 @@ namespace MaunoWeb.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login");
         }
-
-        // ─────────────────────────────────────────
-        // REGISTER
-        // ─────────────────────────────────────────
 
         [HttpGet]
         public IActionResult Register() => View();
@@ -167,7 +157,7 @@ namespace MaunoWeb.Controllers
             // Min 8 chars, at least 1 uppercase, 1 digit, 1 special character
             if (!Regex.IsMatch(Password, @"^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"))
             {
-                ViewBag.ErrorMessage = "Password must be at least 8 characters and include an uppercase letter, a number, and a special character (e.g. Admin@123).";
+                ViewBag.ErrorMessage = "Password must be at least 8 characters and include an uppercase letter, a number, and a special character (e.g. Useractive@2026).";
                 return View();
             }
 
@@ -228,9 +218,6 @@ namespace MaunoWeb.Controllers
             return RedirectToAction("Login");
         }
 
-        // ─────────────────────────────────────────
-        // FORGOT PASSWORD
-        // ─────────────────────────────────────────
 
         [HttpGet]
         public IActionResult ForgotPassword() => View();
